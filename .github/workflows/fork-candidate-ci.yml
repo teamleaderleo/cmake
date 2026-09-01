@@ -1,0 +1,43 @@
+name: Fork candidate CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/fork-candidate-ci.yml
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Candidate ref or SHA to test
+        required: false
+        default: fix/ninja-empty-custom-command-current
+
+permissions:
+  contents: read
+
+jobs:
+  ninja-empty-custom-command:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CANDIDATE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'fix/ninja-empty-custom-command-current' }}
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_REF }}
+          persist-credentials: false
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build build-essential libssl-dev
+
+      - name: Bootstrap CMake
+        run: ./bootstrap --parallel=2
+
+      - name: Build CMake
+        run: make -j2
+
+      - name: Run Ninja RunCMake suite
+        run: bin/ctest -R '^RunCMake\.Ninja$' --output-on-failure -V
