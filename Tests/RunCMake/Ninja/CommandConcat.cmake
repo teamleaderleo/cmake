@@ -10,3 +10,12 @@ add_custom_target(check_output ALL
   COMMAND ${CMAKE_COMMAND} -E copy ${output1} ${output1}.copy
   COMMAND ${CMAKE_COMMAND} -E copy ${output2} ${output2}.copy)
 add_dependencies(check_output concat_cmd)
+
+# A command erased by generator-expression evaluation has no executable work.
+# Ninja should emit its existing phony custom-command rule instead of retaining
+# a working-directory-only command (which fails as bare `cd /D` on Windows).
+add_custom_command(
+  OUTPUT empty_cmd_output
+  COMMAND "$<$<BOOL:0>:${CMAKE_COMMAND}>"
+  VERBATIM)
+add_custom_target(empty_cmd ALL DEPENDS empty_cmd_output)
