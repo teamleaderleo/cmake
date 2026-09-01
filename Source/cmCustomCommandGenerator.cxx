@@ -278,7 +278,9 @@ cmCustomCommandGenerator::cmCustomCommandGenerator(
 
 unsigned int cmCustomCommandGenerator::GetNumberOfCommands() const
 {
-  return static_cast<unsigned int>(this->CommandLines.size());
+  return this->HasOnlyEmptyCommandLines()
+    ? 0u
+    : static_cast<unsigned int>(this->CommandLines.size());
 }
 
 void cmCustomCommandGenerator::FillEmulatorsWithArguments()
